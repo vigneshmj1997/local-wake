@@ -24,11 +24,11 @@ def trim_silence_with_vad(audio, sample_rate):
     _logger.info(f"Trimmed audio to [{start_sample/sample_rate:.2f}s, {end_sample/sample_rate:.2f}s]")
     return audio[start_sample:end_sample]
 
-def record(output, duration=3, trim_silence=True):
+def record(output, duration=3, trim_silence=True, **kwargs):
     """Record audio and save as WAV file"""
     _logger.info(f"Recording for {duration} seconds...")
     sample_rate=16000
-    audio = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=1, dtype='int16')
+    audio = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=1, dtype='int16',**kwargs)
     sd.wait()
 
     if trim_silence:

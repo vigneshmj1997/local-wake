@@ -35,7 +35,7 @@ def load_support_set(support_folder, method="embedding"):
     
     return support
 
-def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide_size=0.25, callback=None):
+def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide_size=0.25, callback=None, **kwargs):
     """Real-time wake word detection"""
     from .features import extract_mfcc_features, extract_embedding_features, dtw_cosine_normalized_distance
 
@@ -61,7 +61,7 @@ def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide
     _logger.info(f"Using {method} features with threshold {threshold}")
     _logger.info("Listening for wake words...")
     
-    with sd.InputStream(samplerate=sample_rate, channels=1, dtype=np.float32) as stream:
+    with sd.InputStream(samplerate=sample_rate, channels=1, dtype=np.float32, **kwargs) as stream:
         while True:
             data, overflowed = stream.read(slide_size_samples)
             if overflowed:
