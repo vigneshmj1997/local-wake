@@ -33,6 +33,7 @@ def main():
     record_parser = subparsers.add_parser("record", help="Record audio samples")
     record_parser.add_argument("output", help="Output .wav file path")
     record_parser.add_argument("--duration", type=int, default=3, help="Duration in seconds")
+    record_parser.add_argument("--device", type = int, help="Device id of microphone")
     record_parser.add_argument("--no-vad", action="store_true", help="Skip VAD silence trimming")
     record_parser.set_defaults(func=record_cmd)
 
@@ -56,6 +57,8 @@ def main():
                               help="Slide size in seconds (default: 0.25)")
     listen_parser.add_argument("--debug", action="store_true", 
                               help="Print debug messages to stderr")
+    listen_parser.add_argument("--device", type = int, 
+                              help="Device id of microphone")                              
     listen_parser.set_defaults(func=listen_cmd)
 
     args = parser.parse_args()

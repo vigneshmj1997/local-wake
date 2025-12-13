@@ -41,6 +41,7 @@ lwake record ref/sample-1.wav
 Optional arguments:
 - `--duration` (default: 3) - Duration in seconds
 - `--no-vad` - Skip Voice Activity Detection silence trimming
+- `--device` - Device id of microphone
 
 Alternatively, you may use any recording tool of your choice. However, make sure that appropriate preprocessing is applied - specifically, silence must be trimmed from the recordings to achieve proper detection performance. A simple example of recording on Linux is:
 ```
@@ -76,6 +77,7 @@ Optional arguments:
 - `--buffer-size` (default: 2.0) - Audio buffer size in seconds
 - `--slide-size` (default: 0.25) - Step size in seconds for the sliding window
 - `--debug` - Enable debug logs to observe real-time scores for incoming audio chunks
+- `--device` - Device id of microphone
 
 All logs are printed to stderr, while detection events are printed in JSON format to stdout:
 ```json
