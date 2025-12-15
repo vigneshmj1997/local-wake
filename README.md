@@ -96,7 +96,7 @@ You can also use local-wake as a Python library:
 import lwake
 
 # Record audio sample
-lwake.record("sample.wav", duration=3, trim_silence=True)
+lwake.record("sample.wav",trim_silence=True)
 
 # Compare two audio files
 distance = lwake.compare("file1.wav", "file2.wav", method="embedding")
