@@ -1,7 +1,11 @@
+import logging
+from dataclasses import asdict
+
 import sounddevice as sd
 import soundfile as sf
-import logging
-from silero_vad import load_silero_vad, get_speech_timestamps
+from silero_vad import get_speech_timestamps, load_silero_vad
+
+from lwake.config import RecordConfig
 
 _logger = logging.getLogger("local-wake")
 
@@ -24,16 +28,16 @@ def trim_silence_with_vad(audio, sample_rate):
     _logger.info(f"Trimmed audio to [{start_sample/sample_rate:.2f}s, {end_sample/sample_rate:.2f}s]")
     return audio[start_sample:end_sample]
 
-def record(output, duration=3, trim_silence=True, **kwargs):
+def record(output, trim_silence=True, record_config = RecordConfig()):
     """Record audio and save as WAV file"""
-    _logger.info(f"Recording for {duration} seconds...")
-    sample_rate=16000
-    audio = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=1, dtype='int16',**kwargs)
+    _logger.info(f"Recording for {record_config.frames/record_config.samplerate} seconds...")
+    
+    audio = sd.rec(**asdict(record_config))
     sd.wait()
 
     if trim_silence:
         _logger.info("Trimming silence using VAD...")
-        audio = trim_silence_with_vad(audio, sample_rate)
+        audio = trim_silence_with_vad(audio, record_config.samplerate)
         
-    sf.write(output, audio, samplerate=sample_rate)
+    sf.write(output, audio, samplerate=record_config.samplerate)
     _logger.info(f"Saved to {output}")

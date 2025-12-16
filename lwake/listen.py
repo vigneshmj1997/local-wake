@@ -1,16 +1,20 @@
+import json
+import logging
 import os
 import sys
 import time
-import json
+from dataclasses import asdict
+
 import numpy as np
 import sounddevice as sd
-import logging
+
+from lwake.config import StreamConfig
 
 _logger = logging.getLogger("local-wake")
 
 def load_support_set(support_folder, method="embedding"):
     """Load reference wake word files from support folder"""
-    from .features import extract_mfcc_features, extract_embedding_features
+    from .features import extract_embedding_features, extract_mfcc_features
     
     support = []
     
@@ -35,9 +39,10 @@ def load_support_set(support_folder, method="embedding"):
     
     return support
 
-def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide_size=0.25, callback=None, **kwargs):
+def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide_size=0.25, callback=None, stream_config = StreamConfig()):
     """Real-time wake word detection"""
-    from .features import extract_mfcc_features, extract_embedding_features, dtw_cosine_normalized_distance
+    from .features import (dtw_cosine_normalized_distance,
+                           extract_embedding_features, extract_mfcc_features)
 
     if callback is None:
         def callback(detection, _):
@@ -52,7 +57,7 @@ def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide
     
     _logger.info(f"Loaded {len(support_set)} reference files")
     
-    sample_rate = 16000
+    sample_rate = stream_config.sample_rate
     buffer_size_samples = int(buffer_size * sample_rate)
     slide_size_samples = int(slide_size * sample_rate)
     audio_buffer = np.zeros(buffer_size_samples, dtype=np.float32)
@@ -61,7 +66,7 @@ def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide
     _logger.info(f"Using {method} features with threshold {threshold}")
     _logger.info("Listening for wake words...")
     
-    with sd.InputStream(samplerate=sample_rate, channels=1, dtype=np.float32, **kwargs) as stream:
+    with sd.InputStream(**asdict(stream_config)) as stream:
         while True:
             data, overflowed = stream.read(slide_size_samples)
             if overflowed:
