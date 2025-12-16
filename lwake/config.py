@@ -29,7 +29,7 @@ class RecordConfig:
     frames: Optional[int] = 48000  # 3 (sec) * 16000 (sample rate)
     samplerate: Optional[int] = 16000
     channels: Optional[int] = 1
-    dtype: Optional[Union[str, np]] = np.float32
+    dtype: Optional[Union[str, Any]] = np.float32
     out: Optional[Any] = None
     mapping: Optional[list[int]] = None
     blocking: bool = False
