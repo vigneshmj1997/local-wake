@@ -3,12 +3,10 @@ import logging
 import os
 import sys
 import time
-from dataclasses import asdict
 
 import numpy as np
 import sounddevice as sd
 
-from lwake.config import StreamConfig
 
 _logger = logging.getLogger("local-wake")
 
@@ -39,10 +37,58 @@ def load_support_set(support_folder, method="embedding"):
     
     return support
 
-def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide_size=0.25, callback=None, stream_config = StreamConfig()):
-    """Real-time wake word detection"""
+def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide_size=0.25, callback=None, stream = None):
+    """Real-time wake word detection using dynamic time warping (DTW) or embedding similarity.
+
+    Continuously monitors audio input for predefined wake words by comparing live
+    audio features against a support set of reference samples. Detection results
+    are passed to a user-defined callback.
+
+    Args:
+        support_folder (str):
+            Path to directory containing reference wake word audio files (WAV format).
+        threshold (float):
+            Similarity threshold for detection. Lower values = more sensitive.
+            Distance below this value triggers a detection.
+        method (str, optional):
+            Feature extraction method. Either "mfcc" or "embedding".
+            Defaults to "embedding".
+        buffer_size (float, optional):
+            Duration (in seconds) of the audio buffer used for feature extraction.
+            Larger buffers may improve accuracy but increase latency.
+            Defaults to 2.0.
+        slide_size (float, optional):
+            Step size (in seconds) for advancing the audio window.
+            Smaller values increase detection frequency but raise CPU usage.
+            Defaults to 0.25.
+        callback (Callable, optional):
+            Function called on detection with signature `callback(detection, stream)`.
+            If not provided, detections are printed as JSON to stdout.
+            Defaults to None.
+        stream (sd.InputStream, optional):
+            Pre-configured sounddevice InputStream. If None, a default stream
+            (16 kHz, mono, float32) is created and managed internally.
+            Defaults to None.
+
+    Example:
+        >>> listen("wakewords/", threshold=0.45)
+        
+        # With custom callback
+        >>> def my_cb(detection, stream):
+        ...     print("Wakeword:", detection['wakeword'])
+        ...     stream.abort()  # stop listening
+        >>> listen("wakewords/", 0.4, callback=my_cb)
+        
+        # Advanced: share stream with real-time processing
+        >>> stream = sd.InputStream(samplerate=16000, channels=1, dtype='float32', device = 2)
+        >>> listen("wakewords/", 0.4, callback=my_cb)
+    """
     from .features import (dtw_cosine_normalized_distance,
                            extract_embedding_features, extract_mfcc_features)
+
+    if stream is None:
+        _logger.debug("Using stream with default configurations")    
+        stream = sd.InputStream(samplerate=16000, channels=1, dtype=np.float32)
 
     if callback is None:
         def callback(detection, _):
@@ -57,7 +103,7 @@ def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide
     
     _logger.info(f"Loaded {len(support_set)} reference files")
     
-    sample_rate = stream_config.sample_rate
+    sample_rate = stream.samplerate
     buffer_size_samples = int(buffer_size * sample_rate)
     slide_size_samples = int(slide_size * sample_rate)
     audio_buffer = np.zeros(buffer_size_samples, dtype=np.float32)
@@ -66,7 +112,7 @@ def listen(support_folder, threshold, method="embedding", buffer_size=2.0, slide
     _logger.info(f"Using {method} features with threshold {threshold}")
     _logger.info("Listening for wake words...")
     
-    with sd.InputStream(**asdict(stream_config)) as stream:
+    with stream:
         while True:
             data, overflowed = stream.read(slide_size_samples)
             if overflowed:
