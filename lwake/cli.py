@@ -1,15 +1,12 @@
 import argparse
 import logging
-from lwake.config import RecordConfig
 
 def record_cmd(args):
     """Record command handler"""
     from .record import record
     
     logging.basicConfig(level=logging.INFO)
-    record_config = RecordConfig()
-    record_config.calculate_frame(duration= args.duration)
-    record(args.output, trim_silence=not args.no_vad, record_config = record_config)
+    record(args.output, args.duration, trim_silence=not args.no_vad)
 
 def compare_cmd(args):
     """Compare command handler"""  
