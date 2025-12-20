@@ -34,6 +34,11 @@ def main():
     record_parser.add_argument("output", help="Output .wav file path")
     record_parser.add_argument("--duration", type=int, default=3, help="Duration in seconds")
     record_parser.add_argument("--no-vad", action="store_true", help="Skip VAD silence trimming")
+    record_parser.add_argument("--buffer-size", type=float, default=2.0, 
+                              help="Audio buffer size in seconds (default: 2.0)")
+    record_parser.add_argument("--slide-size", type=float, default=0.25, 
+                              help="Slide size in seconds (default: 0.25)")
+    
     record_parser.set_defaults(func=record_cmd)
 
     # Compare subcommand
