@@ -1,15 +1,12 @@
 import argparse
 import logging
-from lwake.config import RecordConfig
 
 def record_cmd(args):
     """Record command handler"""
     from .record import record
     
     logging.basicConfig(level=logging.INFO)
-    record_config = RecordConfig()
-    record_config.calculate_frame(duration= args.duration)
-    record(args.output, trim_silence=not args.no_vad, record_config = record_config)
+    record(args.output, args.duration, trim_silence=not args.no_vad)
 
 def compare_cmd(args):
     """Compare command handler"""  
@@ -37,6 +34,11 @@ def main():
     record_parser.add_argument("output", help="Output .wav file path")
     record_parser.add_argument("--duration", type=int, default=3, help="Duration in seconds")
     record_parser.add_argument("--no-vad", action="store_true", help="Skip VAD silence trimming")
+    record_parser.add_argument("--buffer-size", type=float, default=2.0, 
+                              help="Audio buffer size in seconds (default: 2.0)")
+    record_parser.add_argument("--slide-size", type=float, default=0.25, 
+                              help="Slide size in seconds (default: 0.25)")
+    
     record_parser.set_defaults(func=record_cmd)
 
     # Compare subcommand
